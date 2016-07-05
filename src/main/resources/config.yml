@@ -1,0 +1,32 @@
+###############################################
+# config.yml of the PlayerWarps plugin        #
+# This plugin has been created by NLThijs48   #
+###############################################
+
+########## GENERAL ##########
+## Chatprefix used for all messages in the chat
+chatPrefix: '&2[PlayerWarps]&r '
+## Enables / disables debug messages in the console, no need to change
+debug: false
+## The .yml language file that should be used, provided by this plugin: EN, NL
+language: EN
+## Sets the default access for new warps, can be 'private' or 'public'
+defaultAccess: private
+
+########## WARP LIMITS ##########
+## If a player has permission to add warps to another player it bypasses the limits set for the player
+## (An admin could add a warp to someone without permission if set to true)
+addwarpOtherLimitBypas: true
+## Configure the max total warps, max private warps and max public warps for different groups (-1 is unlimited)
+## Assign a group to players by giving them the permission 'playerwarps.limits.<group>'
+## Every player already has the group 'default' and ops have the unlimited group
+## If a player has multiple groups the highest numbers are used
+warpLimitGroups:
+  default:
+    total: 1
+    private: 1
+    public: 0
+  unlimited:
+    total: -1
+    private: -1
+    public: -1
