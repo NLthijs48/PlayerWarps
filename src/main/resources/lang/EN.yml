@@ -1,10 +1,6 @@
 ####################################################
 # English language file for the PlayerWarps plugin #
 ####################################################
-# Copy this file and change the strings to your    #
-# favor. Then change the 'language' setting in     #
-# the config to the filename (excluding .yml)      #
-####################################################
 
 to-help: "/warp to <warp>"
 to-helpOther: "/warp to <warp> [player]"
@@ -13,7 +9,7 @@ to-noPermissionPublic: "You don't have permission to warp to public warps"
 to-noPermissionPrivate: "You don't have permission to warp to another players private warp"
 to-wrongWarp: "The warp '%0%' does not exist, check with /warp list"
 to-wrongWarpOther: "%0% does not have a warp '%1%'"
-to-failed: "Teleporting to the warp failed, try agian later"
+to-failed: "Teleporting to the warp failed, try again later"
 to-warped: "Succesfully warped to '%0%'"
 to-warpedOther: "Succesfully warped to '%0%' from %1%"
 to-hasNoWarps: "You don't have any warps, add them with /warp add"
