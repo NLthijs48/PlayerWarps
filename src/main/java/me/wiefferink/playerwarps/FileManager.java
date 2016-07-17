@@ -1,20 +1,23 @@
 package me.wiefferink.playerwarps;
 
+import com.google.common.base.Charsets;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 public class FileManager {
 	private PlayerWarps plugin;
 	private ObjectInputStream input = null;
 	private ObjectOutputStream output = null;
-	private HashMap<String, HashMap<String, Warp>> warps = null;
-	private String warpsPath = null;
+	private Map<UUID, Map<String, Warp>> warps = null;
+	private YamlConfiguration warpsFile;
+	private File warpsPath;
+
+	private boolean dirty = false;
 
 	/**
 	 * Constructor
@@ -22,23 +25,18 @@ public class FileManager {
 	 */
 	public FileManager(PlayerWarps plugin) {
 		this.plugin = plugin;		
-		
-		/* Initialize files */
 		warps = new HashMap<>();
-		
-		/* Initialize paths */
-		warpsPath = plugin.getDataFolder().getPath() + File.separator + "warps";
+		warpsPath = new File(plugin.getDataFolder()+File.separator+"warps.yml");
 	}
 
 	/**
 	 * Get the total amount of warps a player has
-	 * @param playerName The name of the player
+	 * @param player The player
 	 * @return The total number of warps the player has
 	 */
-	public int getCurrentTotalWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getCurrentTotalWarps(UUID player) {
 		int result = 0;
-		HashMap<String, Warp> playerWarps = warps.get(playerName);
+		Map<String, Warp> playerWarps = warps.get(player);
 		if (playerWarps != null) {
 			result = playerWarps.keySet().size();
 		}
@@ -47,13 +45,12 @@ public class FileManager {
 
 	/**
 	 * Get the amount of private warps a player has
-	 * @param playerName The name of the player
+	 * @param player The player
 	 * @return The number of private warps the player has
 	 */
-	public int getCurrentPrivateWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getCurrentPrivateWarps(UUID player) {
 		int result = 0;
-		HashMap<String, Warp> playerWarps = warps.get(playerName);
+		Map<String, Warp> playerWarps = warps.get(player);
 		if (playerWarps != null) {
 			for (String warp : playerWarps.keySet()) {
 				if (playerWarps.get(warp) != null && !playerWarps.get(warp).isPublished()) {
@@ -66,13 +63,12 @@ public class FileManager {
 
 	/**
 	 * Get the amount of public warps a player has
-	 * @param playerName The name of the player
+	 * @param player The player
 	 * @return The number of public warps the player has
 	 */
-	public int getCurrentPublicWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getCurrentPublicWarps(UUID player) {
 		int result = 0;
-		HashMap<String, Warp> playerWarps = warps.get(playerName);
+		Map<String, Warp> playerWarps = warps.get(player);
 		if (playerWarps != null) {
 			for (String warp : playerWarps.keySet()) {
 				if (playerWarps.get(warp) != null && playerWarps.get(warp).isPublished()) {
@@ -85,14 +81,13 @@ public class FileManager {
 
 	/**
 	 * Get the total number of warps the player can still set
-	 * @param playerName Name of the player
+	 * @param uPlayer The player
 	 * @return Integer.MAX_VALUE if unlimited, otherwise a number
 	 */
-	public int getPossibleTotalWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getPossibleTotalWarps(UUID uPlayer) {
 		int result = 0;
 
-		Player player = Bukkit.getPlayer(playerName);
+		Player player = Bukkit.getPlayer(uPlayer);
 		if (player == null) {
 			return 0;
 		}
@@ -117,14 +112,13 @@ public class FileManager {
 
 	/**
 	 * Get the number of private warps the player can still set
-	 * @param playerName Name of the player
+	 * @param uPlayer The player
 	 * @return Integer.MAX_VALUE if unlimited, otherwise a number
 	 */
-	public int getPossiblePrivateWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getPossiblePrivateWarps(UUID uPlayer) {
 		int result = 0;
 
-		Player player = Bukkit.getPlayer(playerName);
+		Player player = Bukkit.getPlayer(uPlayer);
 		if (player == null) {
 			return 0;
 		}
@@ -148,14 +142,12 @@ public class FileManager {
 
 	/**
 	 * Get the number of public warps the player can still set
-	 * @param playerName Name of the player
+	 * @param uPlayer The player
 	 * @return Integer.MAX_VALUE if unlimited, otherwise a number
 	 */
-	public int getPossiblePublicWarps(String playerName) {
-		playerName = playerName.toLowerCase();
+	public int getPossiblePublicWarps(UUID uPlayer) {
 		int result = 0;
-
-		Player player = Bukkit.getPlayer(playerName);
+		Player player = Bukkit.getPlayer(uPlayer);
 		if (player == null) {
 			return 0;
 		}
@@ -176,149 +168,160 @@ public class FileManager {
 		return result;
 	}
 
-
 	/**
-	 * Load all data from the files
-	 * @return true if it succeeded, otherwise false
+	 * Load the warps.yml file from disk
+	 * @return true if succeeded, otherwise false
 	 */
-	@SuppressWarnings("unchecked")
-	public boolean loadFiles() {
-		boolean error = false;
-		warps.clear();
-		File file = new File(warpsPath);
-		if (file.exists()) {
-			/* Load all rents from file */
-			try {
-				input = new ObjectInputStream(new FileInputStream(warpsPath));
-				warps = (HashMap<String, HashMap<String, Warp>>) input.readObject();
-				input.close();
-			} catch (IOException | ClassNotFoundException e) {
-				plugin.getLogger().info("Error: Something went wrong reading file: " + warpsPath);
-				e.printStackTrace();
-				error = true;
+	public boolean loadWarps() {
+		if(warpsPath.exists() && warpsPath.isFile()) {
+			try(
+					InputStreamReader reader = new InputStreamReader(new FileInputStream(warpsPath), Charsets.UTF_8)
+			) {
+				warpsFile = YamlConfiguration.loadConfiguration(reader);
+			} catch(IOException e) {
+				plugin.getLogger().warning("Could not load warps.yml file: "+warpsPath.getAbsolutePath());
+			}
+		}
+		if(warpsFile == null) {
+			warpsFile = new YamlConfiguration();
+		}
+		// Build map with warps
+		int warpCount = 0, playerCount = 0;
+		for(String player : warpsFile.getKeys(false)) {
+			ConfigurationSection playerSection = warpsFile.getConfigurationSection(player);
+			if(playerSection.getKeys(false).size() == 0) {
+				warpsFile.set(player, null);
+				saveFiles();
+				continue;
 			}
 
-			if (!error) {
-				Set<String> groups = plugin.config().getConfigurationSection("warpLimitGroups").getKeys(false);
-				for (String group : groups) {
-					if (!"unlimited".equals(group) && !"default".equals(group)) {
-						Permission perm = new Permission("playerwarps.limits." + group);
-						Bukkit.getPluginManager().addPermission(perm);
-					}
-				}
-				Bukkit.getPluginManager().recalculatePermissionDefaults(Bukkit.getPluginManager().getPermission("playerwarps.limits"));
-				
-				/* Output info to console */
-				if (warps.keySet().size() == 1) {
-					plugin.debug("Warps of " + warps.keySet().size() + " player loaded");
-				} else {
-					plugin.debug("Warps of " + warps.keySet().size() + " players loaded");
-				}
+			UUID uPlayer;
+			try {
+				uPlayer = UUID.fromString(player);
+			} catch(IllegalArgumentException e) {
+				continue;
 			}
-		} else {
-			this.saveFiles();
-			plugin.getLogger().info("New file for the warps created, should only happen when starting for the first time");
+			Map<String, Warp> playerWarps = warps.get(uPlayer);
+			if(playerWarps == null) {
+				playerWarps = new HashMap<>();
+				warps.put(uPlayer, playerWarps);
+			}
+
+			for(String warpName : playerSection.getKeys(false)) {
+				Warp warp = new Warp(uPlayer, playerSection.getConfigurationSection(warpName));
+				playerWarps.put(warpName, warp);
+				warpCount++;
+			}
+			playerCount++;
 		}
-		return !error;
+		plugin.debug(playerCount+" players with "+warpCount+" warps have been loaded");
+		return true;
 	}
+
 
 	/**
 	 * Save all files to disk
 	 */
 	public void saveFiles() {
-		try {
-			output = new ObjectOutputStream(new FileOutputStream(warpsPath));
-			output.writeObject(warps);
-			output.close();
-		} catch (IOException e) {
-			plugin.getLogger().info("File could not be saved: " + warpsPath);
-		}
+		dirty = true;
+	}
 
+	public void saveFilesNow() {
+		if(dirty) {
+			dirty = false;
+			for(UUID player : warps.keySet()) {
+				Map<String, Warp> playerWarps = warps.get(player);
+				plugin.debug("player: "+player);
+				if(playerWarps != null) {
+					for(String warpName : playerWarps.keySet()) {
+						plugin.debug("  warp: "+warpName);
+						Warp warp = playerWarps.get(warpName);
+						if(warp != null) {
+							warpsFile.set(player.toString()+"."+warpName, warp.getDetails());
+						}
+					}
+				}
+			}
+			try {
+				warpsFile.save(warpsPath);
+			} catch(IOException e) {
+				plugin.getLogger().warning("Could not save warps.yml file: "+warpsPath.getAbsolutePath());
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
 	 * Get player warps from the list
-	 * @param playerName Name of the player you want to get the warps from
+	 * @param player Name of the player you want to get the warps from
 	 * @return The Map with all the values from the player
 	 */
-	public HashMap<String, Warp> getPlayerWarps(String playerName) {
-		playerName = playerName.toLowerCase();
-		return warps.get(playerName);
+	public Map<String, Warp> getPlayerWarps(UUID player) {
+		return warps.get(player);
+	}
+
+	/**
+	 * Get a warp from a player
+	 * @param player The player to get the warp from
+	 * @param name   The name of the warp to get
+	 * @return The warp of the player, or null if there is none
+	 */
+	public Warp getWarp(UUID player, String name) {
+		Warp result = null;
+		Map<String, Warp> playerWarps = getPlayerWarps(player);
+		if(playerWarps != null) {
+			result = playerWarps.get(name.toLowerCase());
+		}
+		return result;
 	}
 
 	/**
 	 * Get all info about playerwarps
 	 * @return The Map with all the values from the players
 	 */
-	public HashMap<String, HashMap<String, Warp>> getAllPlayerWarps() {
+	public Map<UUID, Map<String, Warp>> getAllPlayerWarps() {
 		return warps;
 	}
 
 	/**
-	 * Add player warps to the map
-	 * @param playerName Name of the player to be added
-	 * @param playerWarps Map containing all the warps for a player
-	 */
-	public void addPlayerWarps(String playerName, HashMap<String, Warp> playerWarps) {
-		playerName = playerName.toLowerCase();
-		warps.put(playerName, playerWarps);
-		this.saveFiles();
-	}
-
-	/**
 	 * Add player warp to the map
-	 * @param playerName Name of the player to be added
+	 * @param player The player to be added
 	 * @param warp The warp that should be added
-	 * @return true if a warp has been overridden, false otherwise
 	 */
-	public boolean addPlayerWarp(String playerName, Warp warp) {
-		playerName = playerName.toLowerCase();
-
-		boolean result;
-		HashMap<String, Warp> playerWarps = this.getPlayerWarps(playerName);
+	public void addPlayerWarp(UUID player, Warp warp) {
+		Map<String, Warp> playerWarps = this.getPlayerWarps(player);
 		if (playerWarps == null) {
 			playerWarps = new HashMap<>();
+			warps.put(player, playerWarps);
 		}
-		result = playerWarps.get(warp.getName().toLowerCase()) != null;
 		playerWarps.put(warp.getName().toLowerCase(), warp);
-		this.addPlayerWarps(playerName, playerWarps);
 		this.saveFiles();
-		return result;
 	}
-
 
 	/**
 	 * Remove a player from the list
-	 * @param playerName Name of the player
+	 * @param player The player
 	 */
-	public boolean removePlayerWarps(String playerName) {
-		playerName = playerName.toLowerCase();
-
-		boolean result = warps.remove(playerName) != null;
+	public boolean removePlayerWarps(UUID player) {
+		boolean result = warps.remove(player) != null;
 		this.saveFiles();
 		return result;
 	}
 
 	/**
 	 * Remove a warp from a player from the list
-	 * @param playerName Name of the player
+	 * @param player The player
 	 */
-	public boolean removePlayerWarp(String playerName, String warpName) {
-		playerName = playerName.toLowerCase();
+	public void removePlayerWarp(UUID player, String warpName) {
 		warpName = warpName.toLowerCase();
-
-		boolean result = false;
-		HashMap<String, Warp> playerWarps = warps.get(playerName);
+		Map<String, Warp> playerWarps = warps.get(player);
 		if (playerWarps != null) {
-			result = playerWarps.remove(warpName) != null;
+			playerWarps.remove(warpName);
 			if (playerWarps.size() == 0) {
-				this.removePlayerWarps(playerName);
+				this.removePlayerWarps(player);
 			}
 		}
-		if (result) {
-			this.saveFiles();
-		}
-		return result;
+		this.saveFiles();
 	}
 
 }

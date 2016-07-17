@@ -2,57 +2,60 @@ package me.wiefferink.playerwarps;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.Serializable;
-import java.util.TreeSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
-public class Warp implements Serializable {
-	/* Class version number */
-	private static final long serialVersionUID = 1L;
-	/* Location */
-	private double x, y, z;
-	private float pitch, yaw;
-	private String world;
-	/* Other */
-	private boolean published;
-	private String player;
-	private String name;
-	private TreeSet<String> trusted;
+public class Warp {
+	private UUID player;
+	private ConfigurationSection details;
+
+	/* CONFIG LAYOUT
+		<name_lower>:
+		  name: <name>
+		  location:
+			x: <double>
+			y: <double>
+			z: <double>
+			world: <string>
+			pitch: <double>
+			yaw: <double>
+		  trusted: <list>
+		  published: <boolean>
+	 */
+
+	/**
+	 * Constructor
+	 * @param player  Name of the owning player
+	 */
+	public Warp(UUID player) {
+		this(player, null);
+	}
 
 	/**
 	 * Constructor
 	 * @param player Name of the owning player
-	 * @param published Other people can use it or not
-	 * @param world Name of the world
-	 * @param x X
-	 * @param y Y
-	 * @param z Z
-	 * @param pitch Pitch
-	 * @param yaw Yaw
+	 * @param details The data of the warp
 	 */
-	public Warp(String name, String player, boolean published, String world, double x, double y, double z, float pitch, float yaw) {
+	public Warp(UUID player, ConfigurationSection details) {
 		this.player = player;
-		this.published = published;
-		this.world = world;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.pitch = pitch;
-		this.yaw = yaw;
-		this.name = name;
-		trusted = new TreeSet<>();
+		this.details = details;
+		if(this.details == null) {
+			this.details = new YamlConfiguration();
+		}
 	}
 
 	/**
-	 * Alternative constructor
-	 * @param name Name of the warp
-	 * @param player Name of the owning player
-	 * @param published Other people can use it or not
-	 * @param location Location
+	 * Get the stored data for this warp
+	 * @return The stored data
 	 */
-	public Warp(String name, String player, boolean published, Location location) {
-		this(name, player, published, location.getWorld().getName(), location.getX(), location.getY(), location.getZ(), location.getPitch(), location.getYaw());
+	public ConfigurationSection getDetails() {
+		return details;
 	}
 
 	/**
@@ -60,35 +63,15 @@ public class Warp implements Serializable {
 	 * @return Location from the warp
 	 */
 	public Location getLocation() {
-		World realWorld = Bukkit.getWorld(world);
-		return new Location(realWorld, x, y, z, yaw, pitch);
+		return Utils.configToLocation(details.getConfigurationSection("location"));
 	}
 
 	/**
-	 * Getters for the location variables
+	 * Set the location of the warp
+	 * @param location The location of the warp
 	 */
-	public double getX() {
-		return x;
-	}
-
-	public double getY() {
-		return y;
-	}
-
-	public double getZ() {
-		return z;
-	}
-
-	public float getYaw() {
-		return yaw;
-	}
-
-	public float getPitch() {
-		return pitch;
-	}
-
-	public String getWorld() {
-		return world;
+	public void setLocation(Location location) {
+		details.set("location", Utils.locationToConfig(location, true));
 	}
 
 	/**
@@ -96,48 +79,69 @@ public class Warp implements Serializable {
 	 * @return true if published, false otherwise
 	 */
 	public boolean isPublished() {
-		return published;
+		return details.getBoolean("published");
+	}
+
+	/**
+	 * Set the published state of the warp
+	 * @param published true to set to public, false to set to private
+	 */
+	public void setPublished(boolean published) {
+		details.set("published", published);
 	}
 
 	/**
 	 * Add a trusted player
-	 * @param name Player to add
+	 * @param player Player to add
 	 */
-	public void addTrustedPlayer(String name) {
-		trusted.add(name.toLowerCase());
+	public void addTrustedPlayer(UUID player) {
+		List<String> trusted = details.getStringList("trusted");
+		trusted.add(player.toString());
+		details.set("trusted", trusted);
 	}
 
 	/**
 	 * Remove a trusted player
-	 * @param name Player to remove
+	 * @param player Player to remove
 	 */
-	public void removeTrustedPlayer(String name) {
-		trusted.remove(name.toLowerCase());
+	public void removeTrustedPlayer(UUID player) {
+		List<String> trusted = details.getStringList("trusted");
+		trusted.remove(player.toString());
+		details.set("trusted", trusted);
 	}
 
 	/**
 	 * Get the trusted players, sorted by name
 	 * @return Set with the trusted players
 	 */
-	public TreeSet<String> getTrustedPlayers() {
-		return trusted;
+	public Set<UUID> getTrustedPlayers() {
+		List<String> trustedPlayers = details.getStringList("trusted");
+		Set<UUID> result = new HashSet<>();
+		for(String player : trustedPlayers) {
+			try {
+				UUID id = UUID.fromString(player);
+				result.add(id);
+			} catch(IllegalArgumentException ignored) {
+			}
+		}
+		return result;
 	}
 
 	/**
 	 * Check if a player is trusted for this warp
-	 * @param name Player to check
+	 * @param player Player to check
 	 * @return true if the player is trusted, otherwise false
 	 */
-	public boolean isTrusted(String name) {
-		return trusted.contains(name.toLowerCase());
+	public boolean isTrusted(UUID player) {
+		return getTrustedPlayers().contains(player);
 	}
 
 	/**
-	 * Get the name of the player who owns this warp
-	 * @return The players name
+	 * Get the the player who owns this warp
+	 * @return The player
 	 */
-	public String getPlayerName() {
-		return player;
+	public OfflinePlayer getPlayer() {
+		return Bukkit.getOfflinePlayer(player);
 	}
 
 	/**
@@ -145,26 +149,28 @@ public class Warp implements Serializable {
 	 * @return The name of the warp
 	 */
 	public String getName() {
-		return name;
+		return details.getString("name");
+	}
+
+	/**
+	 * Set the name of the warp
+	 * @param name The name of the warp
+	 */
+	public void setName(String name) {
+		details.set("name", name);
 	}
 
 	@Override
 	public String toString() {
 		String result = "warp(";
-		result += "name=" + name;
-		result += ", player=" + player;
-		result += ", published=" + published;
-		result += ", world=" + world;
-		result += ", x=" + x;
-		result += ", y=" + y;
-		result += ", z=" + z;
-		result += ", pitch=" + pitch;
-		result += ", yaw=" + yaw;
-		result += ", trusted=" + trusted.toString();
+		result += "name="+getName();
+		result += ", player="+getPlayer().getName();
+		result += ", published="+isPublished();
+		result += ", location="+getLocation().toString();
+		result += ", trusted="+getTrustedPlayers().toString();
 		result += ")";
 		return result;
 	}
-
 
 }
 

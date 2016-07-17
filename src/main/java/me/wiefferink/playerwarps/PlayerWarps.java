@@ -4,25 +4,27 @@ package me.wiefferink.playerwarps;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
 public final class PlayerWarps extends JavaPlugin {
-	/* General variables */
+	// General variables
 	private FileManager fileManager = null;
 	private LanguageManager languageManager = null;
+	private CommandManager commandManager = null;
 	private boolean configOk = false;
 	private boolean debug = false;
 	private String chatprefix = null;
 
-	/* Folder where the language files will be stored */
+	// Folder where the language files will be stored
 	public final String languageFolder = "lang";
 
 
@@ -45,22 +47,19 @@ public final class PlayerWarps extends JavaPlugin {
 
 		// Load all data from files
 		fileManager = new FileManager(this);
-		error = !fileManager.loadFiles();
+		error = !fileManager.loadWarps();
 
 		if (error) {
 			this.getLogger().info("The plugin has not started, fix the errors listed above");
 		} else {
-			// Setup CommandManager
-			CommandManager commandManager = new CommandManager(this);
-			List<String> commands = Arrays.asList("warp", "sethome", "delhome", "home");
-			for (String command : commands) {
-				PluginCommand pluginCommand = getCommand(command);
-				if (pluginCommand != null) {
-					pluginCommand.setExecutor(commandManager);
-				} else {
-					getLogger().warning("Command " + command + " is not properly registered in plugin.yml!");
+			commandManager = new CommandManager(this);
+			// Save warps timer
+			new BukkitRunnable() {
+				@Override
+				public void run() {
+					fileManager.saveFilesNow();
 				}
-			}
+			}.runTaskTimer(this, 18000L, 18000L);
 		}
 	}
 
@@ -68,6 +67,9 @@ public final class PlayerWarps extends JavaPlugin {
 	 * Called on shutdown or reload of the server
 	 */
 	public void onDisable() {
+		getFileManager().saveFilesNow();
+		Bukkit.getScheduler().cancelTasks(this);
+		HandlerList.unregisterAll(this);
 		fileManager = null;
 		languageManager = null;
 		configOk = false;
@@ -92,48 +94,51 @@ public final class PlayerWarps extends JavaPlugin {
 	}
 
 	/**
-	 * Method to send a message to a CommandSender, using chatprefix if it is a player
-	 * @param target The CommandSender you wan't to send the message to (e.g. a player)
-	 * @param key The key to get the translation
-	 * @param params The parameters to inject into the message string
+	 * Method to get the CommandManager
+	 * @return The commandManager
 	 */
-	public void message(Object target, String key, Object... params) {
-		String langString = this.fixColors(languageManager.getLang(key, params));
-		if (langString == null) {
-			this.getLogger().info("Something is wrong with the language file, could not find key: " + key);
-		} else {
-			if (target instanceof Player) {
-				((Player) target).sendMessage(this.fixColors(chatprefix) + langString);
-			} else if (target instanceof CommandSender) {
-				((CommandSender) target).sendMessage(langString);
-			} else if (target instanceof Logger) {
-				((Logger) target).info(langString);
-			} else {
-				this.getLogger().info("Could not send message, target is wrong: " + langString);
+	public CommandManager getCommandManager() {
+		return commandManager;
+	}
+
+	public void configurableMessage(String prefix, Object target, String key, Object... params) {
+		String langString = Utils.applyColors(this.languageManager.getLang(key, params));
+		if(langString == null) {
+			getLogger().info("Something is wrong with the language file, could not find key: "+key);
+		} else if((target instanceof Player)) {
+			String message = langString;
+			if(prefix != null) {
+				message = prefix+message;
 			}
+			message = Utils.applyColors(message);
+			((Player)target).sendMessage(message);
+		} else if((target instanceof CommandSender)) {
+			((CommandSender)target).sendMessage(langString);
+		} else if((target instanceof Logger)) {
+			((Logger)target).info(ChatColor.stripColor(langString));
+		} else if(target instanceof BufferedWriter) {
+			try {
+				if(prefix != null) {
+					langString = prefix+langString;
+				}
+				((BufferedWriter)target).append(ChatColor.stripColor(langString));
+				((BufferedWriter)target).newLine();
+			} catch(IOException e) {
+				getLogger().warning("Error while printing message to BufferedWriter: "+e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			getLogger().info("Could not send message, target is wrong: "+langString);
 		}
 	}
 
-	/**
-	 * Convert color and formatting codes to bukkit values
-	 * @param input Start string with color and formatting codes in it
-	 * @return String with the color and formatting codes in the bukkit format
-	 */
-	public String fixColors(String input) {
-		String result = null;
-		if (input != null) {
-			result = input.replaceAll("(&([a-f0-9]))", "\u00A7$2");
-			result = result.replaceAll("&k", ChatColor.MAGIC.toString());
-			result = result.replaceAll("&l", ChatColor.BOLD.toString());
-			result = result.replaceAll("&m", ChatColor.STRIKETHROUGH.toString());
-			result = result.replaceAll("&n", ChatColor.UNDERLINE.toString());
-			result = result.replaceAll("&o", ChatColor.ITALIC.toString());
-			result = result.replaceAll("&r", ChatColor.RESET.toString());
-			result = result.replaceAll("�", "\u20AC");
-		}
-		return result;
+	public void message(Object target, String key, Object... params) {
+		configurableMessage(this.chatprefix, target, key, params);
 	}
 
+	public void messageNoPrefix(Object target, String key, Object... params) {
+		configurableMessage(null, target, key, params);
+	}
 
 	/**
 	 * Function for quitting the plugin, NOT USED ATM
@@ -190,7 +195,7 @@ public final class PlayerWarps extends JavaPlugin {
 		}
 
 		for (String message : messages) {
-			target.sendMessage(this.fixColors(message));
+			target.sendMessage(Utils.applyColors(message));
 		}
 	}
 
@@ -232,11 +237,8 @@ public final class PlayerWarps extends JavaPlugin {
 	 * Reload the config of the plugin
 	 */
 	public void reload() {
-		this.saveDefaultConfig();
-		this.reloadConfig();
-		configOk = this.checkConfig();
-		chatprefix = this.config().getString("chatPrefix");
-		languageManager = new LanguageManager(this);
+		onDisable();
+		onEnable();
 	}
 
 }

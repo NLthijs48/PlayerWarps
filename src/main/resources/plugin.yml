@@ -36,6 +36,7 @@ permissions:
       playerwarps.info: true
       playerwarps.infoprivate: true
       playerwarps.infopublic: true
+      playerwarps.tabcomplete: true
   playerwarps.help:
     description: Allows you to see the help pages
     default: true
@@ -95,4 +96,7 @@ permissions:
     default: op
   playerwarps.infopublic:
     description: Display info about public warps from other players
+    default: true
+  playerwarps.tabcomplete:
+    description: Tab complete commands
     default: true
