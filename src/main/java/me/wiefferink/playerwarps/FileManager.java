@@ -304,6 +304,7 @@ public class FileManager {
 	 */
 	public boolean removePlayerWarps(UUID player) {
 		boolean result = warps.remove(player) != null;
+		warpsFile.set(player.toString(), null);
 		this.saveFiles();
 		return result;
 	}
@@ -317,6 +318,7 @@ public class FileManager {
 		Map<String, Warp> playerWarps = warps.get(player);
 		if (playerWarps != null) {
 			playerWarps.remove(warpName);
+			warpsFile.set(player.toString()+"."+warpName, null);
 			if (playerWarps.size() == 0) {
 				this.removePlayerWarps(player);
 			}
