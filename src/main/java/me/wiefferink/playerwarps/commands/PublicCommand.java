@@ -56,6 +56,10 @@ public class PublicCommand extends CommandPlayerWarps {
 				for(String warpPlayer : sortedNames) {
 					UUID warpPlayerId = Bukkit.getOfflinePlayer(warpPlayer).getUniqueId();
 					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(warpPlayerId);
+					if(playerWarps == null) {
+						plugin.getFileManager().removePlayerWarps(warpPlayerId);
+						continue;
+					}
 
 					TreeSet<String> sorted2 = new TreeSet<>(playerWarps.keySet());
 					// Add all warps to a string
