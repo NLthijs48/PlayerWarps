@@ -5,7 +5,7 @@ commands:
   warp:
     description: Display help (all possible commands)
     usage: /warp
-    aliases: [wr]
+    aliases: [wr,warps]
   sethome:
     description: Add a warp
   home:
