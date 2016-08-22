@@ -231,12 +231,10 @@ public class FileManager {
 			dirty = false;
 			for(UUID player : warps.keySet()) {
 				Map<String, Warp> playerWarps = warps.get(player);
-				plugin.debug("player: "+player);
 				if(playerWarps != null) {
 					for(String warpName : playerWarps.keySet()) {
-						plugin.debug("  warp: "+warpName);
 						Warp warp = playerWarps.get(warpName);
-						if(warp != null) {
+						if(warp != null && warpName != null) {
 							warpsFile.set(player.toString()+"."+warpName, warp.getDetails());
 						}
 					}
