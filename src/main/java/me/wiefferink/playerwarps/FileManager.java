@@ -231,7 +231,7 @@ public class FileManager {
 			dirty = false;
 			for(UUID player : warps.keySet()) {
 				Map<String, Warp> playerWarps = warps.get(player);
-				if(playerWarps != null) {
+				if(playerWarps != null && player != null) {
 					for(String warpName : playerWarps.keySet()) {
 						Warp warp = playerWarps.get(warpName);
 						if(warp != null && warpName != null) {
