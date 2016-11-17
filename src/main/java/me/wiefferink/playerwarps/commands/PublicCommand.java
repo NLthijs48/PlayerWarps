@@ -49,7 +49,7 @@ public class PublicCommand extends CommandPlayerWarps {
 				TreeSet<String> sortedNames = new TreeSet<>();
 				for(UUID uPlayer : fileManager.getAllPlayerWarps().keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uPlayer);
-					if(offlinePlayer != null) {
+					if(offlinePlayer != null && offlinePlayer.getName() != null) {
 						sortedNames.add(offlinePlayer.getName());
 					}
 				}
