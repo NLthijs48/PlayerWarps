@@ -99,6 +99,15 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <relocations>
+                                <!-- Relocate messaging framework -->
+                                <relocation>
+                                    <pattern>me.wiefferink.interactivemessenger</pattern>
+                                    <shadedPattern>me.wiefferink.playerwarps.shaded.interactivemessenger</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
