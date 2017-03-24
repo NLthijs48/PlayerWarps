@@ -17,6 +17,10 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
+        <repository>
+            <id>nlthijs48</id>
+            <url>http://maven.wiefferink.me</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -25,6 +29,13 @@
             <artifactId>spigot-api</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- InteractiveMessenger library -->
+        <dependency>
+            <groupId>me.wiefferink</groupId>
+            <artifactId>interactivemessenger</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
 

@@ -1,10 +1,13 @@
 package me.wiefferink.playerwarps;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Utils {
 	/**
@@ -65,15 +68,17 @@ public class Utils {
 	}
 
 	/**
-	 * Convert color and formatting codes to bukkit values
-	 * @param input Start string with color and formatting codes in it
-	 * @return String with the color and formatting codes in the bukkit format
+	 * Get a string list from the config, with fallback to single string as list
+	 * @param section The section to look in
+	 * @param key     The key in the section to get
+	 * @return A list
 	 */
-	public static String applyColors(String input) {
-		String result = null;
-		if(input != null) {
-			result = ChatColor.translateAlternateColorCodes('&', input);
+	public static List<String> listOrSingle(ConfigurationSection section, String key) {
+		if (section.isList(key)) {
+			return section.getStringList(key);
+		} else if (section.isSet(key)) {
+			return new ArrayList<>(Collections.singletonList(section.getString(key)));
 		}
-		return result;
+		return null;
 	}
 }

@@ -1,14 +1,18 @@
 package me.wiefferink.playerwarps.commands;
 
+import me.wiefferink.interactivemessenger.processing.Message;
 import me.wiefferink.playerwarps.FileManager;
 import me.wiefferink.playerwarps.PlayerWarps;
 import me.wiefferink.playerwarps.Warp;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -54,45 +58,33 @@ public class PublicCommand extends CommandPlayerWarps {
 					}
 				}
 				for(String warpPlayer : sortedNames) {
-					UUID warpPlayerId = Bukkit.getOfflinePlayer(warpPlayer).getUniqueId();
-					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(warpPlayerId);
+					OfflinePlayer player = Bukkit.getOfflinePlayer(warpPlayer);
+					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
 					if(playerWarps == null) {
-						plugin.getFileManager().removePlayerWarps(warpPlayerId);
+						plugin.getFileManager().removePlayerWarps(player.getUniqueId());
 						continue;
 					}
 
-					TreeSet<String> sorted2 = new TreeSet<>(playerWarps.keySet());
+					TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
+
 					// Add all warps to a string
-					if(!(fileManager.getCurrentTotalWarps(warpPlayerId) == 0)) {
-						String warps = "";
-						String realName = "";
-						boolean first = true;
-						for(String warpName : sorted2) {
+					if (!(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0)) {
+						List<String> warps = new ArrayList<>();
+						for (String warpName : sorted) {
 							Warp warp = playerWarps.get(warpName);
 							UUID senderUUID = null;
 							if(sender instanceof Player) {
 								senderUUID = ((Player)sender).getUniqueId();
 							}
 							if(warp.isPublished()) {
-								if(first) {
-									warps += warp.getName();
-									realName = warp.getPlayer().getName();
-									first = false;
-								} else {
-									warps += ", "+warp.getName();
-								}
+								warps.add(warp.getName());
 							} else if(warp.getTrustedPlayers().contains(senderUUID)) {
-								if(first) {
-									warps += ChatColor.GREEN+warp.getName()+ChatColor.RESET;
-									realName = warp.getPlayer().getName();
-									first = false;
-								} else {
-									warps += ", "+warp.getName();
-								}
+								warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
 							}
 						}
-						if(warps.length() != 0) {
-							plugin.messageNoPrefix(sender, "public-entry", realName, warps);
+
+						if (!warps.isEmpty()) {
+							plugin.messageNoPrefix(sender, "public-entry", player.getName(), Message.fromString(StringUtils.join(warps, ", ")));
 						}
 					}
 				}
@@ -106,12 +98,10 @@ public class PublicCommand extends CommandPlayerWarps {
 				if(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0) {
 					plugin.message(sender, "public-noWarpsPlayer", args[1]);
 				} else {
-					String warps = "";
 					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
 					TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
-					String realName = "";
+					List<String> warps = new ArrayList<>();
 
-					boolean first = true;
 					for(String warpName : sorted) {
 						Warp warp = playerWarps.get(warpName);
 						UUID senderUUID = null;
@@ -119,25 +109,13 @@ public class PublicCommand extends CommandPlayerWarps {
 							senderUUID = ((Player)sender).getUniqueId();
 						}
 						if(warp.isPublished()) {
-							if(first) {
-								warps += warp.getName();
-								realName = warp.getPlayer().getName();
-								first = false;
-							} else {
-								warps += ", "+warp.getName();
-							}
+							warps.add(warp.getName());
 						} else if(warp.getTrustedPlayers().contains(senderUUID)) {
-							if(first) {
-								warps += ChatColor.GREEN+warp.getName()+ChatColor.RESET;
-								realName = warp.getPlayer().getName();
-								first = false;
-							} else {
-								warps += ", "+warp.getName();
-							}
+							warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
 						}
 					}
-					if(warps.length() != 0) {
-						plugin.message(sender, "public-player", realName, warps);
+					if (!warps.isEmpty()) {
+						plugin.message(sender, "public-player", player.getName(), Message.fromString(StringUtils.join(warps, ", ")));
 					} else {
 						plugin.message(sender, "public-noWarpsPlayer", args[1]);
 					}

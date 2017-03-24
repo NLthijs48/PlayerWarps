@@ -53,9 +53,8 @@ public class DelCommand extends CommandPlayerWarps {
 				plugin.message(sender, "cmd-onlyByPlayer");
 				return;
 			}
-			Player player = (Player)sender;
-			String playerName = player.getName();
 
+			Player player = (Player)sender;
 			if(fileManager.getPlayerWarps(player.getUniqueId()) == null) {
 				plugin.message(sender, "del-wrongWarp", args[1]);
 			} else {

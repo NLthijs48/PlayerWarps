@@ -6,13 +6,18 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class FileManager {
 	private PlayerWarps plugin;
-	private ObjectInputStream input = null;
-	private ObjectOutputStream output = null;
 	private Map<UUID, Map<String, Warp>> warps = null;
 	private YamlConfiguration warpsFile;
 	private File warpsPath;
@@ -92,12 +97,12 @@ public class FileManager {
 			return 0;
 		}
 
-		Set<String> groups = plugin.config().getConfigurationSection("warpLimitGroups").getKeys(false);
+		Set<String> groups = plugin.getConfig().getConfigurationSection("warpLimitGroups").getKeys(false);
 		ArrayList<String> list = new ArrayList<>(groups);
 		groups.remove("unlimited");
 		for (String group : groups) {
 			if (player.hasPermission("playerwarps.limits." + group)) {
-				int w = plugin.config().getInt("warpLimitGroups." + group + ".total");
+				int w = plugin.getConfig().getInt("warpLimitGroups." + group + ".total");
 				if (w > result) {
 					result = w;
 				}
@@ -123,11 +128,11 @@ public class FileManager {
 			return 0;
 		}
 
-		Set<String> groups = plugin.config().getConfigurationSection("warpLimitGroups").getKeys(false);
+		Set<String> groups = plugin.getConfig().getConfigurationSection("warpLimitGroups").getKeys(false);
 		groups.remove("unlimited");
 		for (String group : groups) {
 			if (player.hasPermission("playerwarps.limits." + group)) {
-				int w = plugin.config().getInt("warpLimitGroups." + group + ".private");
+				int w = plugin.getConfig().getInt("warpLimitGroups." + group + ".private");
 				if (w > result) {
 					result = w;
 				}
@@ -152,11 +157,11 @@ public class FileManager {
 			return 0;
 		}
 
-		Set<String> groups = plugin.config().getConfigurationSection("warpLimitGroups").getKeys(false);
+		Set<String> groups = plugin.getConfig().getConfigurationSection("warpLimitGroups").getKeys(false);
 		groups.remove("unlimited");
 		for (String group : groups) {
 			if (player.hasPermission("playerwarps.limits." + group)) {
-				int w = plugin.config().getInt("warpLimitGroups." + group + ".public");
+				int w = plugin.getConfig().getInt("warpLimitGroups." + group + ".public");
 				if (w > result) {
 					result = w;
 				}
@@ -214,7 +219,7 @@ public class FileManager {
 			}
 			playerCount++;
 		}
-		plugin.debug(playerCount+" players with "+warpCount+" warps have been loaded");
+		PlayerWarps.debug(playerCount + " players with " + warpCount + " warps have been loaded");
 		return true;
 	}
 

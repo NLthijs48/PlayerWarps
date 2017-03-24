@@ -60,7 +60,7 @@ public class AddCommand extends CommandPlayerWarps {
 
 		// Published or not?
 		boolean published = false;
-		String pub = plugin.config().getString("defaultAccess");
+		String pub = plugin.getConfig().getString("defaultAccess");
 		if(args.length >= 3) {
 			pub = args[2];
 			if("public".equalsIgnoreCase(pub)) {
@@ -92,7 +92,7 @@ public class AddCommand extends CommandPlayerWarps {
 
 		// Check max amount
 		UUID id = forPlayer.getUniqueId();
-		if(!(args.length >= 4) || !plugin.config().getBoolean("addwarpOtherLimitBypas")) {
+		if (!(args.length >= 4) || !plugin.getConfig().getBoolean("addwarpOtherLimitBypas")) {
 			int currentTotal = fileManager.getCurrentTotalWarps(id);
 			int possibleTotal = fileManager.getPossibleTotalWarps(id);
 			int currentPrivate = fileManager.getCurrentPrivateWarps(id);

@@ -1,9 +1,25 @@
 package me.wiefferink.playerwarps;
 
-import me.wiefferink.playerwarps.commands.*;
-import org.bukkit.command.*;
+import me.wiefferink.playerwarps.commands.AddCommand;
+import me.wiefferink.playerwarps.commands.CommandPlayerWarps;
+import me.wiefferink.playerwarps.commands.DelCommand;
+import me.wiefferink.playerwarps.commands.InfoCommand;
+import me.wiefferink.playerwarps.commands.ListCommand;
+import me.wiefferink.playerwarps.commands.PublicCommand;
+import me.wiefferink.playerwarps.commands.ToCommand;
+import me.wiefferink.playerwarps.commands.TrustCommand;
+import me.wiefferink.playerwarps.commands.UntrustCommand;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 	private PlayerWarps plugin;
@@ -72,7 +88,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 		args = translateArgs(command, args);
 
 		// Execute command
-		plugin.debug("command: "+command.getName()+", args: "+Arrays.toString(args));
+		PlayerWarps.debug("command: " + command.getName() + ", args: " + Arrays.toString(args));
 		boolean executed = false;
 		for(int i = 0; i < commands.size() && !executed; i++) {
 			if(commands.get(i).canExecute("warp", args)) {

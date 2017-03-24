@@ -52,8 +52,6 @@ public class UntrustCommand extends CommandPlayerWarps {
 				return;
 			}
 			Player player = (Player)sender;
-			String playerName = player.getName();
-
 			Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
 			if(playerWarps == null) {
 				plugin.message(sender, "untrust-noWarps", args[2]);
