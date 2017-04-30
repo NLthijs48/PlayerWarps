@@ -29,7 +29,7 @@ public class FileManager {
 	 * @param plugin The PlayerWarps plugin
 	 */
 	public FileManager(PlayerWarps plugin) {
-		this.plugin = plugin;		
+		this.plugin = plugin;
 		warps = new HashMap<>();
 		warpsPath = new File(plugin.getDataFolder()+File.separator+"warps.yml");
 	}
@@ -304,6 +304,7 @@ public class FileManager {
 	/**
 	 * Remove a player from the list
 	 * @param player The player
+	 * @return true if a warp actually has been removed, false otherwise
 	 */
 	public boolean removePlayerWarps(UUID player) {
 		boolean result = warps.remove(player) != null;
@@ -315,6 +316,7 @@ public class FileManager {
 	/**
 	 * Remove a warp from a player from the list
 	 * @param player The player
+	 * @param warpName The name of the warp to remove
 	 */
 	public void removePlayerWarp(UUID player, String warpName) {
 		warpName = warpName.toLowerCase();
