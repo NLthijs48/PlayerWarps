@@ -116,8 +116,10 @@ public class ToCommand extends CommandPlayerWarps {
 			if(sender instanceof Player) {
 				Player player = (Player)sender;
 				Map<String, Warp> playerWarps = plugin.getFileManager().getPlayerWarps(player.getUniqueId());
-				for(Warp warp : playerWarps.values()) {
-					result.add(warp.getName());
+				if(playerWarps != null) {
+					for(Warp warp : playerWarps.values()) {
+						result.add(warp.getName());
+					}
 				}
 			}
 		}
