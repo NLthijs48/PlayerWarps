@@ -1,13 +1,15 @@
 # PlayerWarps
 Advanced warping plugin: private/public warps, adding friends, and limits
-
-### Features
 * Per player warps.
 * Private warps.
 * Adding friends to private warps.
 * Public warps.
 * Permission based limits to set the maximum private warps, public warps and the total warps.
 * Language file to change all messages (based on [InteractiveMessenger](https://github.com/NLthijs48/InteractiveMessenger))
+
+## Information
+* **Build server:** http://jenkins.wiefferink.me/job/PlayerWarps/
+* **Javadocs:** https://wiefferink.me/PlayerWarps/javadocs
 
 ### Commands
 The base command is `/warp`, which has the following subcommands:
