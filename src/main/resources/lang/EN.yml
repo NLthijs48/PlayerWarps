@@ -4,6 +4,13 @@
 
 cmd-noPlayer: "'%0%' has never visited the server yet."
 
+action: "[gold][bold]<%0%>[/bold]"
+
+command:
+  - "[bold]%0%[/bold]"
+  - "    hover: %lang:action|Use %1%|%"
+  - "    command: %1%"
+
 to-help: "/warp to <warp>."
 to-helpOther: "/warp to <warp> [player]."
 to-noPermission: "You don't have permission to warp."
@@ -51,13 +58,9 @@ del-deleted: "Warp '%0%' succesfully deleted."
 del-deletedOther: "Warp '%0%' succesfully deleted for %1%."
 
 list-header: "Warps from %0%:"
-list-public:
-  - "[gray]Public:[reset] %0%."
-  - "    command: /warp to %0%"
+list-public: "[gray]Public:[reset] %lang:command|%0%|/warp to %0%|%"
 list-noPublic: "&7No public warps set."
-list-private:
-  - "[gray]Private:[reset] %0%."
-  - "    command: /warp to %0%"
+list-private: "[gray]Private:[reset] %lang:command|%0%|/warp to %0%|%"
 list-noPrivate: "[gray]No private warps set."
 list-noPermission: "You don't have permission to list warps."
 list-noPermissionOther: "You don't have permission to list warps from another player."
