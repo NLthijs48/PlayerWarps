@@ -1,14 +1,6 @@
 package me.wiefferink.playerwarps;
 
-import me.wiefferink.playerwarps.commands.AddCommand;
-import me.wiefferink.playerwarps.commands.CommandPlayerWarps;
-import me.wiefferink.playerwarps.commands.DelCommand;
-import me.wiefferink.playerwarps.commands.InfoCommand;
-import me.wiefferink.playerwarps.commands.ListCommand;
-import me.wiefferink.playerwarps.commands.PublicCommand;
-import me.wiefferink.playerwarps.commands.ToCommand;
-import me.wiefferink.playerwarps.commands.TrustCommand;
-import me.wiefferink.playerwarps.commands.UntrustCommand;
+import me.wiefferink.playerwarps.commands.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -40,6 +32,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 		commands.add(new TrustCommand(plugin));
 		commands.add(new UntrustCommand(plugin));
 		commands.add(new InfoCommand(plugin));
+		commands.add(new ReloadCommand(plugin));
 
 		// Register commands in bukkit
 		List<String> commands = Arrays.asList("warp", "sethome", "delhome", "home");

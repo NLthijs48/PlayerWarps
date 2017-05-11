@@ -34,6 +34,7 @@ help-del: "&6/warp del [gray]-[reset] Delete a warp."
 help-trust: "&6/warp trust [gray]-[reset] Give a player access to a warp."
 help-untrust: "&6/warp untrust [gray]-[reset] Stop a player from using a warp."
 help-info: "&6/warp info [gray]-[reset] Display info about a warp."
+help-reload: "&6/warp reload [gray]-[reset] Reloads the plugin."
 
 add-wrongArgs: "/warp add <name> [private|public]."
 add-wrongArgsOther: "/warp add <name> [private|public] [player]."
@@ -108,6 +109,8 @@ info-location: "[reset]X: [gray]%0% [reset]Y: &7%1% [reset]Z: &7%2%."
 info-rotation: "[reset]World: [gray]%0% [reset]Pitch: [gray]%1% [reset]Yaw: [gray]%2%."
 info-noTrusted: "[reset]No players trusted."
 info-trusted: "[reset]Trusted:[gray] %0%."
+
+reload-success: "[reset]Successfully reloaded the plugin"
 
 cmd-notValid: "That command is not valid, use '/warp' for help."
 cmd-onlyByPlayer: "This command can only be run by a player."
