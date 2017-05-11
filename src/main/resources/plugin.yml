@@ -37,6 +37,7 @@ permissions:
       playerwarps.infoprivate: true
       playerwarps.infopublic: true
       playerwarps.tabcomplete: true
+      playerwarps.reload: true
   playerwarps.help:
     description: Allows you to see the help pages
     default: true
@@ -100,3 +101,6 @@ permissions:
   playerwarps.tabcomplete:
     description: Tab complete commands
     default: true
+  playerwarps.reload:
+    description: Reloads the plugin
+    default: op
