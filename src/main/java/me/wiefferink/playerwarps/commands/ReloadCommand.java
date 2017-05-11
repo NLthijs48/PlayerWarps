@@ -3,9 +3,6 @@ package me.wiefferink.playerwarps.commands;
 import me.wiefferink.playerwarps.PlayerWarps;
 import org.bukkit.command.CommandSender;
 
-/**
- * Created by ewoud on 11/05/2017.
- */
 public class ReloadCommand extends CommandPlayerWarps {
 
     public ReloadCommand(PlayerWarps plugin) {
