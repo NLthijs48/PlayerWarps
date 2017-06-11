@@ -12,6 +12,8 @@ debug: false
 language: EN
 ## Sets the default access for new warps, can be 'private' or 'public'
 defaultAccess: private
+# Maximum number of locations the teleport function should check to find a safe spot.
+maximumTries: 100
 
 ########## WARP LIMITS ##########
 ## If a player has permission to add warps to another player it bypasses the limits set for the player

@@ -1,6 +1,7 @@
 package me.wiefferink.playerwarps.commands;
 
 import me.wiefferink.playerwarps.PlayerWarps;
+import me.wiefferink.playerwarps.Utils;
 import me.wiefferink.playerwarps.Warp;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -65,7 +66,7 @@ public class ToCommand extends CommandPlayerWarps {
 				return;
 			}
 
-			boolean warpResult = player.teleport(warp.getLocation());
+			boolean warpResult = Utils.teleportToLocation(player, warp.getLocation(), plugin.getConfig().getInt("maximumTries"));
 			if(!warpResult) {
 				plugin.message(player, "to-failed");
 				return;
@@ -99,7 +100,7 @@ public class ToCommand extends CommandPlayerWarps {
 				return;
 			}
 
-			boolean warpResult = player.teleport(warp.getLocation());
+			boolean warpResult = Utils.teleportToLocation(player, warp.getLocation(), plugin.getConfig().getInt("maximumTries"));
 			if(!warpResult) {
 				plugin.message(player, "to-failed");
 				return;
