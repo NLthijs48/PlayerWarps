@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,85 +46,103 @@ public class PublicCommand extends CommandPlayerWarps {
 			return;
 		}
 
-		if(fileManager.getAllPlayerWarps().size() == 0) {
-			plugin.message(sender, "public-noWarps");
-		} else {
-			if(args.length == 1) {
-				plugin.message(sender, "public-header");
-				TreeSet<String> sortedNames = new TreeSet<>();
-				for(UUID uPlayer : fileManager.getAllPlayerWarps().keySet()) {
-					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uPlayer);
-					if(offlinePlayer != null && offlinePlayer.getName() != null) {
-						sortedNames.add(offlinePlayer.getName());
-					}
-				}
-				for(String warpPlayer : sortedNames) {
-					OfflinePlayer player = Bukkit.getOfflinePlayer(warpPlayer);
-					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
-					if(playerWarps == null) {
-						plugin.getFileManager().removePlayerWarps(player.getUniqueId());
-						continue;
-					}
+		// Async to get offline players
+		new BukkitRunnable() {
+			private final List<Message> messages = new ArrayList<>();
+			@Override
+			public void run() {
+				collectMessages();
 
-					TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
-
-					// Add all warps to a string
-					if (!(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0)) {
-						List<String> warps = new ArrayList<>();
-						for (String warpName : sorted) {
-							Warp warp = playerWarps.get(warpName);
-							UUID senderUUID = null;
-							if(sender instanceof Player) {
-								senderUUID = ((Player)sender).getUniqueId();
-							}
-							if(warp.isPublished()) {
-								warps.add(warp.getName());
-							} else if(warp.getTrustedPlayers().contains(senderUUID)) {
-								warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
-							}
-						}
-
-						if (!warps.isEmpty()) {
-							plugin.messageNoPrefix(sender, "public-entry", player.getName(), Message.fromString(StringUtils.join(warps, ", ")));
-						}
+				// Sync to send messages
+				new BukkitRunnable() {
+					@Override
+					public void run() {
+						messages.forEach(message -> message.send(sender));
 					}
-				}
-			} else {
-				// List public warps from another player
-				OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
-				if(player == null) {
-					plugin.message(sender, "cmd-noPlayer", args[1]);
-					return;
-				}
-				if(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0) {
-					plugin.message(sender, "public-noWarpsPlayer", args[1]);
+				}.runTask(plugin);
+			}
+
+			private void collectMessages() {
+				if(fileManager.getAllPlayerWarps().size() == 0) {
+					messages.add(Message.fromKey("public-noWarps"));
 				} else {
-					Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
-					TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
-					List<String> warps = new ArrayList<>();
+					if(args.length == 1) {
+						messages.add(Message.fromKey("public-header"));
+						TreeSet<String> sortedNames = new TreeSet<>();
+						for(UUID uPlayer : fileManager.getAllPlayerWarps().keySet()) {
+							OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uPlayer);
+							if(offlinePlayer != null && offlinePlayer.getName() != null) {
+								sortedNames.add(offlinePlayer.getName());
+							}
+						}
+						for(String warpPlayer : sortedNames) {
+							OfflinePlayer player = Bukkit.getOfflinePlayer(warpPlayer);
+							Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
+							if(playerWarps == null) {
+								plugin.getFileManager().removePlayerWarps(player.getUniqueId());
+								continue;
+							}
 
-					for(String warpName : sorted) {
-						Warp warp = playerWarps.get(warpName);
-						UUID senderUUID = null;
-						if(sender instanceof Player) {
-							senderUUID = ((Player)sender).getUniqueId();
+							TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
+
+							// Add all warps to a string
+							if (!(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0)) {
+								List<String> warps = new ArrayList<>();
+								for (String warpName : sorted) {
+									Warp warp = playerWarps.get(warpName);
+									UUID senderUUID = null;
+									if(sender instanceof Player) {
+										senderUUID = ((Player)sender).getUniqueId();
+									}
+									if(warp.isPublished()) {
+										warps.add(warp.getName());
+									} else if(warp.getTrustedPlayers().contains(senderUUID)) {
+										warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
+									}
+								}
+
+								if (!warps.isEmpty()) {
+									messages.add(Message.fromKey("public-entry").replacements(player.getName(), Message.fromString(StringUtils.join(warps, ", "))));
+								}
+							}
 						}
-						if(warp.isPublished()) {
-							warps.add(warp.getName());
-						} else if(warp.getTrustedPlayers().contains(senderUUID)) {
-							warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
-						}
-					}
-					if (!warps.isEmpty()) {
-						plugin.message(sender, "public-player", player.getName(), Message.fromString(StringUtils.join(warps, ", ")));
 					} else {
-						plugin.message(sender, "public-noWarpsPlayer", args[1]);
+						// List public warps from another player
+						OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
+						if(player == null) {
+							messages.add(Message.fromKey("cmd-noPlayer").replacements(args[1]));
+							return;
+						}
+						if(fileManager.getCurrentTotalWarps(player.getUniqueId()) == 0) {
+							messages.add(Message.fromKey("public-noWarpsPlayer").replacements(args[1]));
+						} else {
+							Map<String, Warp> playerWarps = fileManager.getPlayerWarps(player.getUniqueId());
+							TreeSet<String> sorted = new TreeSet<>(playerWarps.keySet());
+							List<String> warps = new ArrayList<>();
+
+							for(String warpName : sorted) {
+								Warp warp = playerWarps.get(warpName);
+								UUID senderUUID = null;
+								if(sender instanceof Player) {
+									senderUUID = ((Player)sender).getUniqueId();
+								}
+								if(warp.isPublished()) {
+									warps.add(warp.getName());
+								} else if(warp.getTrustedPlayers().contains(senderUUID)) {
+									warps.add(ChatColor.GREEN + warp.getName() + ChatColor.RESET);
+								}
+							}
+							if (!warps.isEmpty()) {
+								messages.add(Message.fromKey("public-player").replacements(player.getName(), Message.fromString(StringUtils.join(warps, ", "))));
+							} else {
+								messages.add(Message.fromKey("public-noWarpsPlayer").replacements(args[1]));
+							}
+						}
 					}
 				}
 			}
-		}
+		}.runTaskAsynchronously(plugin);
 	}
-
 }
 
 
