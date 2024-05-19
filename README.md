@@ -8,7 +8,6 @@ Advanced warping plugin: private/public warps, adding friends, and limits
 * Language file to change all messages (based on [InteractiveMessenger](https://github.com/NLthijs48/InteractiveMessenger))
 
 ## Information
-* **Build server:** http://jenkins.wiefferink.me/job/PlayerWarps/
 * **Javadocs:** https://wiefferink.me/PlayerWarps/javadocs
 
 ### Commands
